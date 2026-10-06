@@ -199,6 +199,158 @@ def create_job():
         return jsonify({
             "error": str(e)
         }), 500
+
+    # --------------------------------------------------
+# GET ALL JOBS API
+# --------------------------------------------------
+
+@app.route("/jobs", methods=["GET"])
+def get_jobs():
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        query = """
+            SELECT
+                job_id,
+                recruiter_id,
+                title,
+                company,
+                location,
+                salary,
+                description,
+                skills,
+                created_at
+            FROM jobs
+            ORDER BY created_at DESC
+        """
+
+        cursor.execute(query)
+
+        jobs = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "jobs": jobs
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+    # --------------------------------------------------
+# APPLY FOR JOB API
+# --------------------------------------------------
+
+@app.route("/applications", methods=["POST"])
+def apply_for_job():
+
+    data = request.get_json()
+
+    job_id = data.get("job_id")
+    candidate_id = data.get("candidate_id")
+
+    # Check required fields
+    if not job_id or not candidate_id:
+        return jsonify({
+            "message": "Job ID and candidate ID are required"
+        }), 400
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Check whether job exists
+        check_job_query = """
+            SELECT job_id
+            FROM jobs
+            WHERE job_id = %s
+        """
+
+        cursor.execute(check_job_query, (job_id,))
+        job = cursor.fetchone()
+
+        if job is None:
+            cursor.close()
+            connection.close()
+
+            return jsonify({
+                "message": "Job not found"
+            }), 404
+
+        # Insert application
+        query = """
+            INSERT INTO applications
+            (job_id, candidate_id, status)
+            VALUES (%s, %s, %s)
+        """
+
+        values = (job_id, candidate_id, "Applied")
+
+        cursor.execute(query, values)
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "message": "Application submitted successfully"
+        }), 201
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+    # --------------------------------------------------
+# GET CANDIDATE APPLICATIONS API
+# --------------------------------------------------
+
+@app.route("/applications/<int:candidate_id>", methods=["GET"])
+def get_candidate_applications(candidate_id):
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        query = """
+            SELECT
+                a.application_id,
+                a.job_id,
+                j.title,
+                j.company,
+                j.location,
+                j.salary,
+                a.status,
+                a.applied_at
+            FROM applications a
+            JOIN jobs j
+                ON a.job_id = j.job_id
+            WHERE a.candidate_id = %s
+            ORDER BY a.applied_at DESC
+        """
+
+        cursor.execute(query, (candidate_id,))
+
+        applications = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "applications": applications
+        }), 200
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 # --------------------------------------------------
 # RUN FLASK SERVER
 # --------------------------------------------------
