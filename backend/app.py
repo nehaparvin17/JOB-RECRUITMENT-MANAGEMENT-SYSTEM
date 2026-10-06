@@ -141,7 +141,64 @@ def login():
             "error": str(e)
         }), 500
 
+# --------------------------------------------------
+# CREATE JOB API
+# --------------------------------------------------
 
+@app.route("/jobs", methods=["POST"])
+def create_job():
+
+    data = request.get_json()
+
+    recruiter_id = data.get("recruiter_id")
+    title = data.get("title")
+    company = data.get("company")
+    location = data.get("location")
+    salary = data.get("salary")
+    description = data.get("description")
+    skills = data.get("skills")
+
+    # Check required fields
+    if not recruiter_id or not title or not company or not location:
+        return jsonify({
+            "message": "Recruiter ID, title, company and location are required"
+        }), 400
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        query = """
+            INSERT INTO jobs
+            (recruiter_id, title, company, location, salary, description, skills)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+
+        values = (
+            recruiter_id,
+            title,
+            company,
+            location,
+            salary,
+            description,
+            skills
+        )
+
+        cursor.execute(query, values)
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "message": "Job posted successfully"
+        }), 201
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 # --------------------------------------------------
 # RUN FLASK SERVER
 # --------------------------------------------------
