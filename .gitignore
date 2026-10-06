@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# SQLite Database
+database.sqlite
+*.sqlite
+*.sqlite3
+*.db
+
+# Uploads (ignore uploaded resumes/files except .gitkeep)
+uploads/*
+!uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
