@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
-    "test": "node test_backend.js"
+    "test": "node test_backend.js && node test_file_upload_and_e2e.js",
+    "users": "node view_users.js"
   },
   "keywords": [],
   "author": "",
